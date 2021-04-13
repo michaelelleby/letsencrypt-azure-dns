@@ -12,6 +12,6 @@ RUN \
 
 RUN mkdir /scripts
 
-COPY scripts/*.sh /scripts
+COPY scripts/*.sh /scripts/
 
 CMD [ "bash", "/scripts/certbot_issue.sh" ]
