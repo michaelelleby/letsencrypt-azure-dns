@@ -8,10 +8,11 @@ RUN \
   apk add --virtual=build gcc libffi-dev musl-dev openssl-dev python3-dev make && \
   pip --no-cache-dir install -U pip && \
   pip --no-cache-dir install azure-cli && \
-  apk del --purge build
-
-RUN mkdir /scripts
+  apk del --purge build && \
+  mkdir /scripts
 
 COPY scripts/*.sh /scripts/
+
+RUN chmod 755 /scripts/*.sh
 
 CMD [ "bash", "/scripts/certbot_issue.sh" ]
