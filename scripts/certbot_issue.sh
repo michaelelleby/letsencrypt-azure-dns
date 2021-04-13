@@ -25,10 +25,15 @@ if [ -z "${CERT_NAME}" ]; then
 fi
 
 if [ "${SPN_ID}" ]; then
+    if [ -z "${TENANT_ID}" ]; then
+        echo "Azure AD tenant id must be set in environment variable TENANT_ID!"
+    fi
     az login --service-principal --username "${SPN_ID}" --password "${SPN_SECRET}" --tenant "${TENANT_ID}"
 else
     az login --identity
 fi
+
+IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
 
 VAULT_ID=$(az keyvault list --query "[?name=='${VAULT}'].id" -o tsv)
 if [ -z "${VAULT_ID}" ]; then
@@ -51,7 +56,7 @@ if [ -n "${STAGING}" ]; then
         --preferred-challenges dns \
         --manual-auth-hook "/scripts/certbot_auth.sh" \
         --manual-cleanup-hook "/scripts/certbot_cleanup.sh" \
-        -d "${DOMAINS}" \
+        $(echo "${DOMAINS_ARRAY[@]/#/-d }") \
         -m "${EMAIL}" \
         --agree-tos \
         --test-cert
@@ -62,13 +67,16 @@ else
         --preferred-challenges dns \
         --manual-auth-hook "/scripts/certbot_auth.sh" \
         --manual-cleanup-hook "/scripts/certbot_cleanup.sh" \
-        -d "${DOMAINS}" \
+        $(echo "${DOMAINS_ARRAY[@]/#/-d }") \
         -m "${EMAIL}" \
         --agree-tos
 fi
 
 CERT_PASSWORD=$(date +%s | sha256sum | base64 | head -c 64)
-echo "${CERT_PASSWORD}" | openssl pkcs12 -export -out "/data/certificate.pfx" -inkey "/etc/letsencrypt/live/${DOMAINS}/privkey.pem" -in "/etc/letsencrypt/live/${DOMAINS}/cert.pem" -certfile "/etc/letsencrypt/live/${DOMAINS}/chain.pem" -passout stdin
+PRIVKEY=$(ls /etc/letsencrypt/live/*/privkey.pem)
+CERT=$(ls /etc/letsencrypt/live/*/cert.pem)
+CHAIN=$(ls /etc/letsencrypt/live/*/chain.pem)
+echo "${CERT_PASSWORD}" | openssl pkcs12 -export -out "/data/certificate.pfx" -inkey "${PRIVKEY}" -in "${CERT}" -certfile "${CHAIN}" -passout stdin
 
 echo "Importing certificate into key vault ${VAULT}.."
 az keyvault certificate import --file "/data/certificate.pfx" --vault-name "${VAULT}" --name "${CERT_NAME}" --password "${CERT_PASSWORD}"
