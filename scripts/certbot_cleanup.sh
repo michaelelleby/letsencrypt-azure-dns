@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DNS_RG=$(az network dns zone list --query "[?name=='${CERTBOT_DOMAIN}'].resourceGroup" -o tsv)
 
