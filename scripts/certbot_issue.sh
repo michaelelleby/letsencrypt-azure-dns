@@ -24,14 +24,22 @@ if [ -z "${CERT_NAME}" ]; then
     exit 1
 fi
 
+if [ -z "${SUBSCRIPTION_ID}" ]; then
+    echo "Azure subscription id must be set in environment variable SUBSCRIPTION_ID!"
+    exit 1
+fi
+
 if [ "${SPN_ID}" ]; then
     if [ -z "${TENANT_ID}" ]; then
         echo "Azure AD tenant id must be set in environment variable TENANT_ID!"
+        exit 1
     fi
     az login --service-principal --username "${SPN_ID}" --password "${SPN_SECRET}" --tenant "${TENANT_ID}"
 else
     az login --identity
 fi
+
+az account set --subscription "${SUBSCRIPTION_ID}"
 
 IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
 
