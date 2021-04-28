@@ -35,7 +35,7 @@ fi
 
 IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
 
-VAULT_ID=$(az keyvault list --query "[?name=='${VAULT}'].id" -o tsv)
+VAULT_ID=$(az keyvault show --name "${VAULT}" --query id -o tsv)
 if [ -z "${VAULT_ID}" ]; then
     SUBSCRIPTION_NAME=$(az account show --query name -o tsv)
 
