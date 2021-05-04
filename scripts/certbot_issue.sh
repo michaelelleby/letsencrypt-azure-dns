@@ -39,6 +39,8 @@ else
     az login --identity
 fi
 
+echo "Changing to subscription ${SUBSCRIPTION_ID}"
+
 az account set --subscription "${SUBSCRIPTION_ID}"
 
 IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
