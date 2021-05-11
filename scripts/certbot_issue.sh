@@ -37,7 +37,7 @@ if [ "${SPN_ID}" ]; then
     az login --service-principal --username "${SPN_ID}" --password "${SPN_SECRET}" --tenant "${TENANT_ID}"
 else
     az login --identity
-fi
+ficertb9t
 
 echo "Changing to subscription ${SUBSCRIPTION_ID}"
 
