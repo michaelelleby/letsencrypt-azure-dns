@@ -37,11 +37,11 @@ if [ "${SPN_ID}" ]; then
     az login --service-principal --username "${SPN_ID}" --password "${SPN_SECRET}" --tenant "${TENANT_ID}"
 else
     az login --identity
-ficertb9t
+fi
 
-echo "Changing to subscription ${SUBSCRIPTION_ID}"
+echo "Changing to subscription ${SUBSCRIPTION_ID:?}"
 
-az account set --subscription "${SUBSCRIPTION_ID}"
+az account set --subscription "${SUBSCRIPTION_ID:?}"
 
 IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
 
@@ -66,7 +66,7 @@ if [ -n "${STAGING}" ]; then
         --preferred-challenges dns \
         --manual-auth-hook "/scripts/certbot_auth.sh" \
         --manual-cleanup-hook "/scripts/certbot_cleanup.sh" \
-        $(echo "${DOMAINS_ARRAY[@]/#/-d }") \
+        "${DOMAINS_ARRAY[@]/#/-d }" \
         -m "${EMAIL}" \
         --agree-tos \
         --test-cert
@@ -77,7 +77,7 @@ else
         --preferred-challenges dns \
         --manual-auth-hook "/scripts/certbot_auth.sh" \
         --manual-cleanup-hook "/scripts/certbot_cleanup.sh" \
-        $(echo "${DOMAINS_ARRAY[@]/#/-d }") \
+        "${DOMAINS_ARRAY[@]/#/-d }" \
         -m "${EMAIL}" \
         --agree-tos
 fi
@@ -86,7 +86,7 @@ CERT_PASSWORD=$(date +%s | sha256sum | base64 | head -c 64)
 PRIVKEY=$(ls /etc/letsencrypt/live/*/privkey.pem)
 CERT=$(ls /etc/letsencrypt/live/*/cert.pem)
 CHAIN=$(ls /etc/letsencrypt/live/*/chain.pem)
-echo "${CERT_PASSWORD}" | openssl pkcs12 -export -out "/data/certificate.pfx" -inkey "${PRIVKEY}" -in "${CERT}" -certfile "${CHAIN}" -passout stdin
+echo "${CERT_PASSWORD:?}" | openssl pkcs12 -export -out "/data/certificate.pfx" -inkey "${PRIVKEY:?}" -in "${CERT:?}" -certfile "${CHAIN:?}" -passout stdin
 
-echo "Importing certificate into key vault ${VAULT}.."
-az keyvault certificate import --file "/data/certificate.pfx" --vault-name "${VAULT}" --name "${CERT_NAME}" --password "${CERT_PASSWORD}"
+echo "Importing certificate into key vault ${VAULT:?}.."
+az keyvault certificate import --file "/data/certificate.pfx" --vault-name "${VAULT:?}" --name "${CERT_NAME:?}" --password "${CERT_PASSWORD:?}"
