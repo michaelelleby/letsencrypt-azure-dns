@@ -53,7 +53,7 @@ if [ -z "${VAULT_ID}" ]; then
     exit 1  
 fi
 
-echo "Got Key Vault id ${VAULT_ID}"
+echo "Got Key Vault id ${VAULT_ID:?}"
 
 mkdir /data
 
